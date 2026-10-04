@@ -10,6 +10,10 @@ export async function GET(request: Request) {
       error,
     } = await supabase.auth.exchangeCodeForSession(code);
     if (!error && user) {
+      // Only allow the explicit creation destination, never arbitrary redirect URLs.
+      if (searchParams.get("next") === "/create") {
+        return NextResponse.redirect(new URL("/create", origin));
+      }
       const { data: profile } = await supabase
         .from("profiles")
         .select("first_name, last_name")

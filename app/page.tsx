@@ -61,9 +61,14 @@ export default async function Home() {
               A picture sets the scene. A caption steals the show.
               <br className="desktop-break" /> You decide what deserves a laugh.
             </p>
-            <a className="button button-dark hero-cta" href="#captions">
-              Explore captions <span aria-hidden="true">&darr;</span>
-            </a>
+            <div className="hero-actions">
+              <a className="button button-dark hero-cta" href="#captions">
+                Explore captions <span aria-hidden="true">&darr;</span>
+              </a>
+              <Link className="button button-outline hero-cta" href="/create">
+                Create a caption <span aria-hidden="true">&rarr;</span>
+              </Link>
+            </div>
             <div className="hero-note">
               <span className="mini-face" aria-hidden="true">
                 :)

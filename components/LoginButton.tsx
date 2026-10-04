@@ -1,16 +1,18 @@
 "use client";
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
-export default function LoginButton() {
+export default function LoginButton({ next }: { next?: "/create" } = {}) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   async function login() {
     setBusy(true);
     setError("");
     try {
+      const callback = new URL("/auth/callback", window.location.origin);
+      if (next === "/create") callback.searchParams.set("next", next);
       const { error } = await createClient().auth.signInWithOAuth({
         provider: "google",
-        options: { redirectTo: `${window.location.origin}/auth/callback` },
+        options: { redirectTo: callback.toString() },
       });
       if (error) throw error;
     } catch {

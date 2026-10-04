@@ -6,7 +6,7 @@ export default function SiteHeader({
   active = "explore",
 }: {
   signedIn?: boolean;
-  active?: "explore" | "profile";
+  active?: "explore" | "profile" | "create";
 }) {
   return (
     <header className="site-header">
@@ -25,6 +25,9 @@ export default function SiteHeader({
         </Link>
         {signedIn ? (
           <>
+            <Link href="/create" className={active === "create" ? "nav-link active" : "nav-link"}>
+              Create a caption
+            </Link>
             <Link
               href="/profile"
               className={active === "profile" ? "nav-link active" : "nav-link"}
