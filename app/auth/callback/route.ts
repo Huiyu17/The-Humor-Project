@@ -1,8 +1,13 @@
 import { NextResponse } from "next/server";
+import { cookies } from "next/headers";
 import { createClient } from "@/lib/supabase/server";
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url);
   const code = searchParams.get("code");
+  const cookieStore = await cookies();
+  const returnToCreate = searchParams.get("next") === "/create" ||
+    cookieStore.get("humor_auth_next")?.value === "create";
+  cookieStore.delete("humor_auth_next");
   if (code) {
     const supabase = await createClient();
     const {
@@ -11,7 +16,7 @@ export async function GET(request: Request) {
     } = await supabase.auth.exchangeCodeForSession(code);
     if (!error && user) {
       // Only allow the explicit creation destination, never arbitrary redirect URLs.
-      if (searchParams.get("next") === "/create") {
+      if (returnToCreate) {
         return NextResponse.redirect(new URL("/create", origin));
       }
       const { data: profile } = await supabase

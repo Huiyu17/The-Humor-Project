@@ -9,7 +9,10 @@ export default function LoginButton({ next }: { next?: "/create" } = {}) {
     setError("");
     try {
       const callback = new URL("/auth/callback", window.location.origin);
-      if (next === "/create") callback.searchParams.set("next", next);
+      // Keep the OAuth callback identical to the configured redirect allowlist.
+      const destination = next === "/create" || window.location.pathname === "/create"
+        ? "create" : "home";
+      document.cookie = `humor_auth_next=${destination}; Path=/; Max-Age=600; SameSite=Lax${window.location.protocol === "https:" ? "; Secure" : ""}`;
       const { error } = await createClient().auth.signInWithOAuth({
         provider: "google",
         options: { redirectTo: callback.toString() },
