@@ -21,20 +21,26 @@ function CaptionCard({
   const [selected, setSelected] = useState(initialVote);
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
+  const [voteFailed, setVoteFailed] = useState(false);
   const [imageFailed, setImageFailed] = useState(false);
   async function rate(value: number) {
     if (busy) return;
     setBusy(true);
     setMessage("");
+    setVoteFailed(false);
     try {
       const result = await vote(caption.id, value);
-      if (result.error) setMessage(result.error);
+      if (result.error) {
+        setMessage(result.error);
+        setVoteFailed(true);
+      }
       else {
         setSelected(result.value);
         setMessage("Vote saved.");
       }
     } catch {
       setMessage("Connection interrupted. Please try again.");
+      setVoteFailed(true);
     } finally {
       setBusy(false);
     }
@@ -65,7 +71,7 @@ function CaptionCard({
         {ratingUnavailable ? (
           <p className="vote-gate">Refresh to load your ratings.</p>
         ) : allowed ? (
-          <div className="vote-buttons">
+          <div className="vote-buttons" role="group" aria-label="Rate this caption" aria-busy={busy}>
             <button
               disabled={busy}
               aria-pressed={selected === 1}
@@ -74,7 +80,7 @@ function CaptionCard({
               }
               onClick={() => rate(1)}
             >
-              Made me laugh <span aria-hidden="true">+</span>
+              Made me laugh <span aria-hidden="true">{selected === 1 ? "\u2713" : "+"}</span>
             </button>
             <button
               disabled={busy}
@@ -84,7 +90,7 @@ function CaptionCard({
               }
               onClick={() => rate(-1)}
             >
-              Not quite <span aria-hidden="true">-</span>
+              Not quite <span aria-hidden="true">{selected === -1 ? "\u2713" : "−"}</span>
             </button>
           </div>
         ) : (
@@ -95,9 +101,9 @@ function CaptionCard({
             &rarr;
           </Link>
         )}
-        {message && (
-          <p role="status" className="vote-status">
-            {message}
+        {allowed && !ratingUnavailable && (
+          <p role={voteFailed ? "alert" : "status"} className={`vote-status${voteFailed ? " vote-error" : ""}`}>
+            {busy ? "Saving your vote..." : message || (selected ? "Your vote is saved. You can change it anytime." : "Choose the reaction that fits.")}
           </p>
         )}
       </div>
@@ -118,8 +124,9 @@ export default function CaptionFeed({
   ratingUnavailable?: boolean;
 }) {
   const [query, setQuery] = useState("");
+  const searchTerm = query.trim().toLowerCase();
   const visible = captions.filter((c) =>
-    c.content.toLowerCase().includes(query.toLowerCase()),
+    c.content.toLowerCase().includes(searchTerm),
   );
   return (
     <section id="captions" className="feed-section">
@@ -157,6 +164,10 @@ export default function CaptionFeed({
           />
         </label>
       </div>
+      {searchTerm && <p className="search-results" role="status">
+        {visible.length} {visible.length === 1 ? "match" : "matches"} in {captions.length} loaded captions.
+        <button type="button" className="text-link search-clear" onClick={() => setQuery("")}>Clear search</button>
+      </p>}
       {visible.length ? (
         <div className="caption-grid">
           {visible.map((caption, index) => (
@@ -174,21 +185,14 @@ export default function CaptionFeed({
       ) : (
         <div className="panel empty-state">
           <h3>
-            {query ? "No matching captions." : "The next laugh is on its way."}
+            {searchTerm ? "No matching captions." : "The next laugh is on its way."}
           </h3>
           <p className="muted">
-            {query
+            {searchTerm
               ? "Try a different search."
               : "There are no captions in the collection yet. Check back soon."}
           </p>
-          {query && (
-            <button
-              className="button button-outline"
-              onClick={() => setQuery("")}
-            >
-              Clear search
-            </button>
-          )}
+          {!searchTerm && <Link href="/create" className="button button-dark">Create a caption &rarr;</Link>}
         </div>
       )}
       <p className="collection-note">

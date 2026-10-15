@@ -24,12 +24,15 @@ export default async function CreatePage() {
     );
   }
 
-  const { data: images, error } = await supabase
-    .from("images")
-    .select("id, url, alt_text, storage_path")
-    .or(`user_id.is.null,user_id.eq.${user.id}`)
-    .order("created_at", { ascending: false })
-    .limit(60);
+  // Fetch independently so personal uploads cannot crowd samples out of the limit.
+  const [samples, uploads] = await Promise.all([
+    supabase.from("images").select("id, url, alt_text, storage_path, user_id")
+      .is("user_id", null).order("created_at", { ascending: false }).limit(60),
+    supabase.from("images").select("id, url, alt_text, storage_path, user_id")
+      .eq("user_id", user.id).order("created_at", { ascending: false }).limit(60),
+  ]);
+  const images = [...(samples.data ?? []), ...(uploads.data ?? [])];
+  const error = samples.error || uploads.error;
 
   return (
     <>
@@ -39,7 +42,7 @@ export default async function CreatePage() {
         <div className="page-heading">
           <span className="eyebrow">YOUR SCENE. AI&apos;S PUNCHLINE.</span>
           <h1>Make campus life <span className="serif">caption-worthy.</span></h1>
-          <p className="muted">Pick a preset or upload your own photo, set the scene, and turn your NYC moment into a caption.</p>
+          <p className="muted">Choose a sample photo or one of your uploads, set the scene, and turn your NYC moment into a caption.</p>
         </div>
         {error ? (
           <div role="alert" className="notice error">Images could not be loaded. Please refresh to try again.</div>

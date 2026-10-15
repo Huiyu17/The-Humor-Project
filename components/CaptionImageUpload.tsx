@@ -8,6 +8,7 @@ export type CaptionImage = {
   url: string;
   alt_text: string;
   storage_path: string | null;
+  user_id: string | null;
 };
 
 export default function CaptionImageUpload({ onUploaded, onBusyChange, disabled }: {
@@ -62,14 +63,14 @@ export default function CaptionImageUpload({ onUploaded, onBusyChange, disabled 
       const { data: { publicUrl } } = supabase.storage.from("caption-images").getPublicUrl(path);
       // Recover a completed metadata write if its response was interrupted.
       const { data: existing, error: lookupError } = await supabase.from("images")
-        .select("id, url, alt_text, storage_path").eq("user_id", user.id)
+        .select("id, url, alt_text, storage_path, user_id").eq("user_id", user.id)
         .eq("storage_path", path).maybeSingle();
       if (lookupError) throw new Error("Photo uploaded, but its record could not be checked. Click Upload photo to retry.");
       let image = existing;
       if (!image) {
         const { data, error } = await supabase.from("images")
           .insert({ url: publicUrl, alt_text: description.trim(), user_id: user.id, storage_path: path })
-          .select("id, url, alt_text, storage_path").single();
+          .select("id, url, alt_text, storage_path, user_id").single();
         if (error || !data) throw new Error("Photo uploaded, but its record could not be saved. Click Upload photo to retry.");
         image = data;
       }
@@ -91,7 +92,7 @@ export default function CaptionImageUpload({ onUploaded, onBusyChange, disabled 
 
   return (
     <details className="caption-upload">
-      <summary>Or upload your own photo</summary>
+      <summary>+ Upload a photo</summary>
       <form className="create-form" onSubmit={upload} aria-busy={busy}>
         <fieldset disabled={disabled || busy}>
           <label htmlFor="caption-photo">Choose a photo</label>

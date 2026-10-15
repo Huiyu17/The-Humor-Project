@@ -111,21 +111,32 @@ export async function generateCaption(formData: FormData) {
     return { error: "AI generation failed or timed out. Please try again." };
   }
 
-  // The invoker function saves both rows in one transaction under the user's RLS.
-  const { data: captionId, error: publishError } = await supabase.rpc(
-    "humor_publish_generated_caption",
-    {
-      p_image_id: image.id,
-      p_user_input: context.trim(),
-      p_prompt: prompt,
-      p_model: model,
-      p_content: content,
-    },
-  );
-  if (publishError || typeof captionId !== "string") {
-    return { error: "Publishing could not be confirmed. Check the collection before retrying." };
+  const { data: draft, error: saveError } = await supabase.from("generations")
+    .insert({ user_id: user.id, image_id: image.id, user_input: context.trim(),
+      prompt, model, generated_content: content })
+    .select("id").single();
+  if (saveError || !draft) {
+    return { error: "Your preview could not be saved. Nothing has been published. Please try again." };
+  }
+
+  return { generationId: draft.id as string, content };
+}
+
+export async function publishCaption(generationId: string) {
+  if (typeof generationId !== "string" || !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(generationId)) {
+    return { error: "Generate a preview before publishing." };
+  }
+  const supabase = await createClient();
+  const { data: { user }, error: authError } = await supabase.auth.getUser();
+  if (authError || !user) return { error: "Please sign in to publish your caption." };
+  // The RPC reads the saved text, verifies ownership and makes retries idempotent.
+  const { data: captionId, error } = await supabase.rpc("humor_publish_preview", {
+    p_generation_id: generationId,
+  });
+  if (error || typeof captionId !== "string") {
+    return { error: "Publishing could not be confirmed. You can retry Publish safely." };
   }
 
   revalidatePath("/");
-  return { captionId, content };
+  return { captionId };
 }
