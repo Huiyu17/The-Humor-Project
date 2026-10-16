@@ -48,7 +48,7 @@ export default async function ProfilePage() {
                 userId={user.id}
                 currentAvatarUrl={profile.avatar_url}
               />
-              <span className="member-badge">THE HUMOR PROJECT MEMBER</span>
+              <span className="member-badge">COLUMBIA CHUCKLES MEMBER</span>
             </aside>
             <section className="panel details-panel">
               <div className="section-heading">

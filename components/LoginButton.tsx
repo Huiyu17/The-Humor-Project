@@ -1,7 +1,7 @@
 "use client";
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
-export default function LoginButton({ next }: { next?: "/create" } = {}) {
+export default function LoginButton({ next }: { next?: "/create" | "/my-humor" } = {}) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   async function login() {
@@ -11,7 +11,7 @@ export default function LoginButton({ next }: { next?: "/create" } = {}) {
       const callback = new URL("/auth/callback", window.location.origin);
       // Keep the OAuth callback identical to the configured redirect allowlist.
       const destination = next === "/create" || window.location.pathname === "/create"
-        ? "create" : "home";
+        ? "create" : next === "/my-humor" || window.location.pathname === "/my-humor" ? "my-humor" : "home";
       document.cookie = `humor_auth_next=${destination}; Path=/; Max-Age=600; SameSite=Lax${window.location.protocol === "https:" ? "; Secure" : ""}`;
       const { error } = await createClient().auth.signInWithOAuth({
         provider: "google",

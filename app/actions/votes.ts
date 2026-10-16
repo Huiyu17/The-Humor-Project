@@ -37,5 +37,6 @@ export async function vote(captionId: string, value: number) {
   if (error || !data)
     return { error: "Your vote was not saved. Please try again." };
   revalidatePath("/");
+  revalidatePath("/my-humor");
   return { value: data.value as number };
 }

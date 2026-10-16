@@ -3,6 +3,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { vote } from "@/app/actions/votes";
 import type { Caption } from "@/lib/captions";
+import CaptionPhoto from "./CaptionPhoto";
 function CaptionCard({
   caption,
   index,
@@ -22,7 +23,6 @@ function CaptionCard({
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
   const [voteFailed, setVoteFailed] = useState(false);
-  const [imageFailed, setImageFailed] = useState(false);
   async function rate(value: number) {
     if (busy) return;
     setBusy(true);
@@ -36,7 +36,7 @@ function CaptionCard({
       }
       else {
         setSelected(result.value);
-        setMessage("Vote saved.");
+        setMessage(result.value === 1 ? "Liked! Find it in My humor." : "Vote saved.");
       }
     } catch {
       setMessage("Connection interrupted. Please try again.");
@@ -47,22 +47,7 @@ function CaptionCard({
   }
   return (
     <article className="caption-card">
-      <div className="caption-image">
-        {caption.image && !imageFailed ? (
-          <>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={caption.image.url}
-              alt={caption.image.alt_text}
-              loading="lazy"
-              onError={() => setImageFailed(true)}
-            />
-          </>
-        ) : (
-          <div className="image-unavailable">Image unavailable</div>
-        )}
-        <span className="image-tag">THE CAPTION CLUB</span>
-      </div>
+      <CaptionPhoto image={caption.image} />
       <div className="caption-body">
         <span className="eyebrow">
           CAPTION {String(index + 1).padStart(2, "0")}
@@ -76,21 +61,28 @@ function CaptionCard({
               disabled={busy}
               aria-pressed={selected === 1}
               className={
-                selected === 1 ? "vote-button selected" : "vote-button"
+                selected === 1 ? "vote-button vote-like selected" : "vote-button vote-like"
               }
               onClick={() => rate(1)}
             >
-              Made me laugh <span aria-hidden="true">{selected === 1 ? "\u2713" : "+"}</span>
+              Made me laugh
+              <svg className="vote-icon" viewBox="0 0 24 24" aria-hidden="true" fill={selected === 1 ? "currentColor" : "none"} stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round">
+                <path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1.1-1.1a5.5 5.5 0 0 0-7.8 7.8L12 21l8.8-8.6a5.5 5.5 0 0 0 0-7.8Z" />
+              </svg>
             </button>
             <button
               disabled={busy}
               aria-pressed={selected === -1}
               className={
-                selected === -1 ? "vote-button selected" : "vote-button"
+                selected === -1 ? "vote-button vote-dislike selected" : "vote-button vote-dislike"
               }
               onClick={() => rate(-1)}
             >
-              Not quite <span aria-hidden="true">{selected === -1 ? "\u2713" : "−"}</span>
+              Not quite
+              <svg className="vote-icon" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
+                <circle cx="12" cy="12" r="9" fill={selected === -1 ? "currentColor" : "none"} />
+                <path d="M8 12h8" stroke={selected === -1 ? "#fff" : "currentColor"} />
+              </svg>
             </button>
           </div>
         ) : (
@@ -132,9 +124,9 @@ export default function CaptionFeed({
     <section id="captions" className="feed-section">
       <div className="feed-heading">
         <div>
-          <span className="eyebrow">FRESH PERSPECTIVES</span>
+          <span className="eyebrow">FROM AROUND CAMPUS</span>
           <h2>
-            The caption collection
+            The Campus Laugh Files
             <span className="count-badge">{captions.length}</span>
           </h2>
         </div>

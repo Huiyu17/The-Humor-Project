@@ -11,6 +11,8 @@ export async function GET(request: Request) {
   );
   const returnToCreate = searchParams.get("next") === "/create" ||
     cookieStore.get("humor_auth_next")?.value === "create";
+  const returnToHumor = searchParams.get("next") === "/my-humor" ||
+    cookieStore.get("humor_auth_next")?.value === "my-humor";
   cookieStore.delete("humor_auth_next");
   if (code) {
     const supabase = await createClient();
@@ -27,9 +29,12 @@ export async function GET(request: Request) {
       });
     }
     if (!error && user) {
-      // Only allow the explicit creation destination, never arbitrary redirect URLs.
+      // Only allow explicit app destinations, never arbitrary redirect URLs.
       if (returnToCreate) {
         return NextResponse.redirect(new URL("/create", origin));
+      }
+      if (returnToHumor) {
+        return NextResponse.redirect(new URL("/my-humor", origin));
       }
       const { data: profile } = await supabase
         .from("profiles")

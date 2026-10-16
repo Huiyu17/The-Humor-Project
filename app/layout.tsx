@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
 import "./globals.css";
 export const metadata: Metadata = {
-  title: "The Humor Project | A better punchline",
+  title: "Columbia Chuckles | Campus life. Better punchlines.",
   description:
-    "A picture sets the scene. A caption steals the show. Explore captions, share your verdict, and find your next laugh.",
+    "AI-generated captions inspired by life at Columbia University. Turn campus moments into punchlines, share your captions, and vote for the ones that make you laugh.",
 };
 export default function RootLayout({
   children,

@@ -6,15 +6,15 @@ export default function SiteHeader({
   active = "explore",
 }: {
   signedIn?: boolean;
-  active?: "explore" | "profile" | "create";
+  active?: "explore" | "profile" | "create" | "my-humor";
 }) {
   return (
     <header className="site-header">
       <Link href="/" className="brand">
-        <span className="brand-mark">
-          h<span>!</span>
+        <span className="brand-mark" aria-hidden="true">
+          c<span>!</span>
         </span>
-        the humor project<span className="brand-dot">.</span>
+        Columbia Chuckles<span className="brand-dot">.</span>
       </Link>
       <nav aria-label="Main navigation">
         <Link
@@ -27,6 +27,12 @@ export default function SiteHeader({
           <>
             <Link href="/create" className={active === "create" ? "nav-link active" : "nav-link"}>
               Create a caption
+            </Link>
+            <Link
+              href="/my-humor"
+              className={active === "my-humor" ? "nav-link active" : "nav-link"}
+            >
+              My humor
             </Link>
             <Link
               href="/profile"

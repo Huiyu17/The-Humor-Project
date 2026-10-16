@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 
 export type CaptionImage = {
@@ -11,9 +11,12 @@ export type CaptionImage = {
   user_id: string | null;
 };
 
-export default function CaptionImageUpload({ onUploaded, onBusyChange, disabled }: {
+export type PendingPhoto = { url: string; name: string };
+
+export default function CaptionImageUpload({ onUploaded, onBusyChange, onPreviewChange, disabled }: {
   onUploaded: (image: CaptionImage) => void;
   onBusyChange: (busy: boolean) => void;
+  onPreviewChange: (photo: PendingPhoto | null) => void;
   disabled: boolean;
 }) {
   const [description, setDescription] = useState("");
@@ -25,6 +28,33 @@ export default function CaptionImageUpload({ onUploaded, onBusyChange, disabled 
   // Retain the path after a metadata failure so retrying does not upload another file.
   const uploaded = useRef<{ path: string; userId: string } | null>(null);
   const fileInput = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (!file) {
+      onPreviewChange(null);
+      return;
+    }
+    const url = URL.createObjectURL(file);
+    onPreviewChange({ url, name: file.name });
+    return () => {
+      URL.revokeObjectURL(url);
+      onPreviewChange(null);
+    };
+  }, [file, onPreviewChange]);
+
+  function chooseFile(next: File | null) {
+    uploaded.current = null;
+    setMessage("");
+    setFailed(false);
+    if (next && (!["image/jpeg", "image/png", "image/webp"].includes(next.type) || next.size === 0 || next.size > 5 * 1024 * 1024)) {
+      setFile(null);
+      if (fileInput.current) fileInput.current.value = "";
+      setFailed(true);
+      setMessage("Choose a JPG, PNG, or WebP image up to 5 MB.");
+      return;
+    }
+    setFile(next);
+  }
 
   async function upload(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -97,7 +127,8 @@ export default function CaptionImageUpload({ onUploaded, onBusyChange, disabled 
         <fieldset disabled={disabled || busy}>
           <label htmlFor="caption-photo">Choose a photo</label>
           <input ref={fileInput} id="caption-photo" type="file" accept="image/jpeg,image/png,image/webp" required
-            onChange={(e) => { setFile(e.target.files?.[0] ?? null); uploaded.current = null; setMessage(""); }} />
+            onChange={(e) => chooseFile(e.target.files?.[0] ?? null)} />
+          {file && <p className="muted small">Preview added above. Add a description and select Upload photo to save it. <button type="button" className="text-link search-clear" onClick={() => { chooseFile(null); if (fileInput.current) fileInput.current.value = ""; }}>Cancel selection</button></p>}
           <p className="muted small">JPG, PNG or WebP, up to 5 MB. Uploaded photos are accessible by public link. AI will receive your photo when you generate a caption.</p>
           <label htmlFor="photo-description">Describe the photo</label>
           <input id="photo-description" type="text" required maxLength={300} value={description}

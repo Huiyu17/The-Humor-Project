@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState, useTransition } from "react";
 import Link from "next/link";
 import { generateCaption, publishCaption } from "@/app/actions/generate";
-import CaptionImageUpload, { type CaptionImage } from "./CaptionImageUpload";
+import CaptionImageUpload, { type CaptionImage, type PendingPhoto } from "./CaptionImageUpload";
 
 export default function GenerateCaptionForm({ images }: { images: CaptionImage[] }) {
   const [imageOptions, setImageOptions] = useState(images);
@@ -21,6 +21,7 @@ export default function GenerateCaptionForm({ images }: { images: CaptionImage[]
   const [published, setPublished] = useState(false);
   const [operation, setOperation] = useState<"generate" | "publish">("generate");
   const [uploading, setUploading] = useState(false);
+  const [pendingPhoto, setPendingPhoto] = useState<PendingPhoto | null>(null);
   const [pending, startTransition] = useTransition();
   const submitting = useRef(false);
   const resultHeading = useRef<HTMLHeadingElement>(null);
@@ -73,7 +74,7 @@ export default function GenerateCaptionForm({ images }: { images: CaptionImage[]
           setPublished(false);
         }
       } catch {
-        setError("Generation was interrupted. Nothing new has been published. Please try again.");
+        setError("We lost the response from the server, so we couldn't confirm a new preview. Check your connection, wait about 15 seconds, then try again. Nothing new has been published.");
       } finally {
         submitting.current = false;
       }
@@ -124,7 +125,13 @@ export default function GenerateCaptionForm({ images }: { images: CaptionImage[]
               onClick={() => changeCategory("mine")}>My photos <span>{imageOptions.filter((image) => image.user_id !== null).length}</span></button>
           </div>
           <p className="muted small">{category === "samples" ? "A collection provided for everyone to create with." : "Your latest uploads, ready for another caption."}</p>
-          {visibleImages.length ? <div className="photo-grid" role="group" aria-label={category === "samples" ? "Sample photos" : "My photos"}>
+          {visibleImages.length || (category === "mine" && pendingPhoto) ? <div className="photo-grid" role="group" aria-label={category === "samples" ? "Sample photos" : "My photos"}>
+            {category === "mine" && pendingPhoto && <div className="photo-option photo-pending">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={pendingPhoto.url} alt={`Local preview: ${pendingPhoto.name}`} />
+              <span className="photo-option-caption">{pendingPhoto.name}<span className="photo-pending-help">Upload to use this photo.</span></span>
+              <span className="photo-selected photo-pending-badge" role="status">{uploading ? "Uploading..." : "Pending upload"}</span>
+            </div>}
             {visibleImages.map((image) => <button type="button" key={image.id} className="photo-option"
               aria-pressed={imageId === image.id} disabled={pending || uploading}
               onClick={() => { setImageId(image.id); setCaption(""); setError(""); }}>
@@ -136,7 +143,8 @@ export default function GenerateCaptionForm({ images }: { images: CaptionImage[]
           </div> : <div className="photo-empty"><strong>{category === "mine" ? "Your photo collection starts here." : "No sample photos yet."}</strong>
             <p className="muted small">{category === "mine" ? "Upload your first photo below to get started." : "Switch to My photos to upload a photo of your own."}</p></div>}
         <div hidden={category !== "mine"}>
-        <CaptionImageUpload disabled={pending || category !== "mine"} onBusyChange={setUploading} onUploaded={(image) => {
+        <CaptionImageUpload disabled={pending || category !== "mine"} onBusyChange={setUploading} onPreviewChange={setPendingPhoto} onUploaded={(image) => {
+          setPendingPhoto(null);
           setImageOptions((current) => [image, ...current.filter((item) => item.id !== image.id)]);
           setImageId(image.id);
           setCaption("");
@@ -167,7 +175,7 @@ export default function GenerateCaptionForm({ images }: { images: CaptionImage[]
           </fieldset>
           {uploading && <p role="status" className="muted small">Uploading your photo. You can generate a caption when the upload finishes.</p>}
           {pending && <p role="status" className="muted small">{operation === "publish" ? "Publishing your caption..." : "Writing your preview. This may take a few moments."}</p>}
-          {error && !caption && <p role="alert" className="notice error">{error}</p>}
+          {error && !caption && <div role="alert" className="notice generation-notice"><strong>Your caption needs another try</strong><p>{error}</p><p className="small">Your photo and scene are still here.</p></div>}
         </form>
       </section>
       <section className="panel caption-result" aria-labelledby="caption-result-heading" aria-busy={pending}>
@@ -189,7 +197,11 @@ export default function GenerateCaptionForm({ images }: { images: CaptionImage[]
               </div>
             </>}
           </> : <p className="muted caption-placeholder">{pending ? "Writing your preview. This may take a few moments." : "Your punchline goes here. Set the scene and select Generate caption to see your preview."}</p>}
-          {error && caption && <p role="alert" className="notice error">{error}</p>}
+          {error && caption && <div role="alert" className={`notice ${operation === "generate" ? "generation-notice" : "error"}`}>
+            <strong>{operation === "generate" ? "Your current preview is still here" : "Publication needs another try"}</strong>
+            <p>{error}</p>
+            {operation === "generate" && <p className="small">You can keep and publish this caption, or try another version when you’re ready.</p>}
+          </div>}
       </section>
     </div>
   );

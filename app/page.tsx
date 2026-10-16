@@ -49,17 +49,16 @@ export default async function Home() {
         <section className="hero">
           <div className="hero-copy">
             <span className="eyebrow">
-              <span className="live-dot" /> A LITTLE LESS SERIOUS. A LOT MORE
-              FUNNY.
+              <span className="live-dot" /> COLUMBIA CAMPUS LIFE, ONE CAPTION AT A TIME.
             </span>
             <h1>
-              Good image.
+              Campus life.
               <br />
-              Better <span className="serif">punchline.</span>
+              Better <span className="serif">punchlines.</span>
             </h1>
             <p>
-              A picture sets the scene. A caption steals the show.
-              <br className="desktop-break" /> You decide what deserves a laugh.
+              AI-generated captions inspired by everyday life at Columbia—from Butler all-nighters to dining halls, dorms, and the NYC subway.
+              {" "}Create your own, explore campus humor, and vote for the ones that feel painfully accurate.
             </p>
             <div className="hero-actions">
               <a className="button button-dark hero-cta" href="#captions">
@@ -73,16 +72,16 @@ export default async function Home() {
               <span className="mini-face" aria-hidden="true">
                 :)
               </span>{" "}
-              A home for people with a sense of humor.
+              Campus moments. Columbia jokes. Shared laughs.
             </div>
           </div>
           <div className="hero-art" aria-hidden="true">
             <span className="orbit orbit-one" />
             <span className="orbit orbit-two" />
             <div className="art-label">
-              HUMOR IS SUBJECTIVE.
+              MADE FOR COLUMBIA.
               <br />
-              THAT&apos;S THE POINT.
+              RATED BY YOU.
             </div>
             <div className="smile-sticker">
               <div className="eyes">
@@ -94,10 +93,10 @@ export default async function Home() {
             <span className="art-spark spark-one">*</span>
             <span className="art-spark spark-two">*</span>
             <div className="caption-sticker">
-              Certified chuckle material.<span>YOU BE THE JUDGE &rarr;</span>
+              Certified Columbia humor.<span>YOU BE THE JUDGE</span>
             </div>
             <span className="art-edition">
-              THE HUMOR PROJECT / CAPTION CLUB
+              COLUMBIA CHUCKLES / CAMPUS HUMOR
             </span>
           </div>
         </section>
@@ -139,7 +138,7 @@ export default async function Home() {
         ) : null}
         {error ? (
           <section id="captions" className="panel empty-state">
-            <span className="eyebrow">THE CAPTION COLLECTION</span>
+            <span className="eyebrow">THE CAMPUS LAUGH FILES</span>
             <h2>We could not load the captions.</h2>
             <p className="muted">Please try again in a moment.</p>
             <Link href="/" className="button button-outline">
@@ -166,7 +165,7 @@ export default async function Home() {
       </main>
       <footer className="site-footer">
         <Link className="brand" href="/">
-          the humor project.
+          Columbia Chuckles.
         </Link>
         <span>Serious about not being serious.</span>
         <span>Made for a good laugh.</span>
