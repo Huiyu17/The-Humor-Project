@@ -13,10 +13,16 @@
 - Each collection has a count, stable sorting and pages of 12. Desktop uses a
   left navigation rail and two columns; small screens use top navigation and one
   card column. Empty collections and failed reads have explicit recovery actions.
-- The author confirms deletion in a modal. Deletion withdraws the publication
-  from Explore, My captions and all liked collections, with no placeholder cards.
-  Other open browser tabs update on their next refresh/navigation; this is not a
-  realtime subscription feature. The user's photo remains available for reuse.
+- The author confirms deletion in a modal ("Move to Trash"). Deletion withdraws
+  the publication from Explore, My captions and all liked collections, with no
+  placeholder cards. Other open browser tabs update on their next
+  refresh/navigation; this is not a realtime subscription feature. The user's
+  photo remains available for reuse.
+- **Trash** (Week 6 feedback) lists the author's deleted captions. **Restore**
+  puts a caption back in Explore and My captions with its original votes and
+  likes. Superadmins can also restore from the admin panel's Withdrawn tab.
+  Captions an admin deleted permanently cannot be restored. See
+  `supabase/010_trash_and_restore.sql` and [week6-feedback.md](week6-feedback.md).
 
 ## Database installation (required before testing mutations)
 
@@ -38,7 +44,8 @@ See [Supabase database function guidance](https://supabase.com/docs/guides/datab
 
 Deletion is a soft withdrawal, not physical data erasure. The backend keeps the
 caption, votes, generation text and source image, but RLS hides withdrawn captions
-and their votes from app users. No restore operation is exposed. A withdrawal
+and their votes from app users. Restore is available through migration 010
+(owner-checked `humor_restore_caption`, plus `admin_restore_caption`). A withdrawal
 marker plus the same advisory lock used for publication prevents stale Publish
 retries from bringing the deleted publication back. Existing public read policies
 are narrowed using restrictive policies rather than relying on UI filtering.

@@ -41,3 +41,21 @@ export async function removeLikedCaption(captionId: string) {
   revalidatePath("/my-humor");
   return { success: true };
 }
+
+export async function restoreCaption(captionId: string) {
+  if (typeof captionId !== "string" || !uuid.test(captionId)) return { error: "This caption is unavailable." };
+  const supabase = await createClient();
+  const { data: { user }, error: authError } = await supabase.auth.getUser();
+  if (authError || !user) return { error: "Please sign in to restore your caption." };
+  // Ownership is checked inside the database; restoring twice is a safe no-op.
+  const { data, error } = await supabase.rpc("humor_restore_caption", { p_caption_id: captionId });
+  if (error || data !== true) {
+    const code = /^[A-Z0-9]{5,12}$/.test(error?.code ?? "") ? error!.code : "UNKNOWN";
+    if (code === "PGRST202") return { error: "Restore isn't set up yet. Ask the app owner to run supabase/010_trash_and_restore.sql. (Code: PGRST202)" };
+    if (error?.message?.includes("moderator")) return { error: "A moderator removed this caption, so only a moderator can restore it." };
+    return { error: "Restore could not be confirmed. Refresh to check, then retry. You can only restore your own captions." };
+  }
+  revalidatePath("/");
+  revalidatePath("/my-humor");
+  return { success: true };
+}

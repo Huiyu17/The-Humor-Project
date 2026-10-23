@@ -1062,6 +1062,13 @@ nav {
 .humor-delete, .humor-unlike { background: transparent; border: 0; padding: 8px 0; font-size: 12px; text-decoration: underline; text-underline-offset: 3px; }
 .humor-delete { color: #9a392a; }
 .humor-unlike { color: var(--green); }
+.humor-restore { min-height: 36px; padding: 7px 14px; font-size: 13px; }
+.caption-card.in-trash .caption-image { filter: grayscale(0.6); opacity: 0.75; }
+.caption-card.in-trash .eyebrow { color: var(--muted); }
+.caption-card.removed-by-admin .eyebrow { color: #9a4708; }
+.humor-removed-note { font-size: 12px; font-weight: 700; color: #9a4708; background: #fdecd8; border-radius: 999px; padding: 4px 10px; text-align: right; }
+.humor-nav-trash { margin-top: 4px; border-top: 1px dashed var(--line); border-top-left-radius: 0; border-top-right-radius: 0; }
+.humor-nav-trash.active { border-top-color: transparent; border-radius: 9px; }
 .humor-pagination { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-top: 28px; }
 .humor-pagination .button { padding: 10px 14px; }
 .humor-empty { margin-top: 0; min-height: 340px; justify-content: center; }
