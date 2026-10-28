@@ -5,6 +5,7 @@ import { randomInt } from "node:crypto";
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { generationErrorMessage } from "@/lib/generation-error";
+import { runCaptionGeneration } from "@/lib/generation-pipeline";
 import { buildCaptionPrompt, captionProblem, jokeAngles, type HumorStyle } from "@/lib/caption-prompt";
 
 const styles = ["relatable", "deadpan", "absurd"] as const;
@@ -93,30 +94,27 @@ export async function generateCaption(formData: FormData) {
     angle: jokeAngles[randomInt(jokeAngles.length)],
   });
 
-  let content: string;
-  try {
-    const ai = new GoogleGenAI({ apiKey });
-    const result = await ai.interactions.create(
-      { model, input: photo ? [{ type: "text", text: prompt }, photo] : prompt, store: false },
-      { timeout: 45_000, retries: { strategy: "none" } },
-    );
-    content = result.output_text?.trim() ?? "";
-    const problem = captionProblem(content, recentCaptions);
-    if (problem === "length") return { error: "The AI didn't return a short, usable caption this time. Try another version; your photo and scene are still here." };
-    if (problem === "duplicate") return { error: "That result repeated one of your recent captions. Try another version for a fresh take. Nothing new has been published." };
-  } catch (error) {
-    return { error: generationErrorMessage(error) };
-  }
-
-  const { data: draft, error: saveError } = await supabase.from("generations")
-    .insert({ user_id: user.id, image_id: image.id, user_input: context.trim(),
-      prompt, model, generated_content: content })
-    .select("id").single();
-  if (saveError || !draft) {
-    return { error: "Your preview could not be saved. Nothing has been published. Please try again." };
-  }
-
-  return { generationId: draft.id as string, content };
+  return runCaptionGeneration({
+    database: supabase, imageId: image.id, context: context.trim(), style,
+    basePrompt: prompt, defaultModel: model,
+    generate: async ({ model: selectedModel, prompt: renderedPrompt }) => {
+      const ai = new GoogleGenAI({ apiKey });
+      const result = await ai.interactions.create(
+        { model: selectedModel, input: photo ? [{ type: "text", text: renderedPrompt }, photo] : renderedPrompt, store: false },
+        { timeout: 45_000, retries: { strategy: "none" } },
+      );
+      return { text: result.output_text ?? "",
+        inputTokens: result.usage?.total_input_tokens,
+        outputTokens: result.usage?.total_output_tokens };
+    },
+    validate: text => {
+      const problem = captionProblem(text, recentCaptions);
+      if (problem === "length") return "The AI didn't return a short, usable caption this time. Try another version; your photo and scene are still here.";
+      if (problem === "duplicate") return "That result repeated one of your recent captions. Try another version for a fresh take. Nothing new has been published.";
+      return null;
+    },
+    describeError: generationErrorMessage,
+  });
 }
 
 export async function publishCaption(generationId: string) {
