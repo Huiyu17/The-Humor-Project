@@ -175,7 +175,7 @@ export default function GenerateCaptionForm({ images }: { images: CaptionImage[]
           </fieldset>
           {uploading && <p role="status" className="muted small">Uploading your photo. You can generate a caption when the upload finishes.</p>}
           {pending && <p role="status" className="muted small">{operation === "publish" ? "Publishing your caption..." : "Writing your preview. This may take a few moments."}</p>}
-          {error && !caption && <div role="alert" className="notice generation-notice"><strong>Your caption needs another try</strong><p>{error}</p><p className="small">Your photo and scene are still here.</p></div>}
+          {error && !caption && <div role="alert" className="notice generation-notice"><strong>Caption could not be generated</strong><p>{error}</p><p className="small">Your photo and scene are still here.</p></div>}
         </form>
       </section>
       <section className="panel caption-result" aria-labelledby="caption-result-heading" aria-busy={pending}>
@@ -200,7 +200,7 @@ export default function GenerateCaptionForm({ images }: { images: CaptionImage[]
           {error && caption && <div role="alert" className={`notice ${operation === "generate" ? "generation-notice" : "error"}`}>
             <strong>{operation === "generate" ? "Your current preview is still here" : "Publication needs another try"}</strong>
             <p>{error}</p>
-            {operation === "generate" && <p className="small">You can keep and publish this caption, or try another version when you’re ready.</p>}
+            {operation === "generate" && <p className="small">Your current preview has not changed. You can still publish it.</p>}
           </div>}
       </section>
     </div>

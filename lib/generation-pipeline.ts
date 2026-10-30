@@ -35,6 +35,9 @@ export async function runCaptionGeneration(input: {
     p_base_prompt: input.basePrompt, p_default_model: input.defaultModel,
   });
   if (error || !isPlan(data)) {
+    // Configuration failures cannot be fixed by the user retrying.
+    const configurationUnavailable = error?.code === "22023" && /No enabled prompt chain with positive weight|requires a single-step prompt chain|Google provider is missing|supports Google models only/i.test(error.message ?? "");
+    if (configurationUnavailable) return { error: "Caption generation is currently unavailable. The site administrator needs to enable a caption generator or update its settings before new captions can be created. Your photo and scene are not the problem." };
     // Do not spend an AI call if we cannot first persist its request.
     return { error: error?.code === "PGRST202"
       ? "Caption generation needs a database update. The app owner must apply migration 013_generation_pipeline.sql."
